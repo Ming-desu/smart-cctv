@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Smart CCTV - {% block title %}{% endblock title %}</title>
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://maxst.icons8.com/vue-static/landings/line-awesome/line-awesome/1.3.0/css/line-awesome.min.css">
+
+  {% block header %}{% endblock header %}
+</head>
+<body style="background: #ececec">
+  <div class="container">
+    {% block content %}{% endblock content %}
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <script>
+    const disableButton = button => {
+      button.disabled = true;
+      button.innerHTML = `
+        <i class="las la-spinner me-2 la-spin"></i>
+        ${button.innerHTML}
+      `;
+    };
+
+    const enableButton = button => {
+      button.disabled = false;
+      button.querySelector('i')?.remove();
+    };
+
+    const showError = (error, id = 'error') => {
+      const container = document.getElementById(id);
+
+      if (!container) {
+        return;
+      }
+
+      container.innerHTML = `
+        <div class="alert alert-warning alert-dismissible fade show" role="alert">
+          <strong>Something went wrong.</strong> ${error}
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+      `;
+    };
+
+    const showNotification = message => {
+      const toastDOM = document.getElementById('toast');
+      const toast = new bootstrap.Toast(toastDOM);
+      toastDOM.querySelector('.toast-body').innerText = message;
+      toast.show();
+    };
+
+    const escapeHTML = str => {
+      const p = document.createElement('p');
+      p.appendChild(document.createTextNode(str));
+      return p.innerHTML;
+    };
+
+    const initializeServiceWorker = () => {
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/sw.js')
+          .then(() => console.log('Service worker registered.'))
+          .catch(err => console.log(err));
+      }
+    };
+
+    const requestNotification = () => {
+      Notification.requestPermission(status => console.log('Notification permission status:', status));
+    };
+
+    let canDisplayNotification = true;
+
+    const displayNotification = (message, timeout) => {
+      if (canDisplayNotification == false) {
+        return;
+      }
+
+      canDisplayNotification = false;
+
+      if (Notification.permission == 'granted') {
+        navigator.serviceWorker.getRegistration()
+          .then(sw => {
+            const options = {
+              body: message,
+              vibrate: [100, 50, 100],
+              data: {
+                dateOfArrival: Date.now(),
+                primaryKey: 1
+              }
+            };
+
+            sw.showNotification('Attention!', options);
+          })
+      }
+
+      setTimeout(() => {
+        canDisplayNotification = true;
+      }, timeout);
+    };
+
+    document.addEventListener('DOMContentLoaded', () => {
+      initializeServiceWorker();
+      requestNotification();
+    });
+
+    axios.defaults.xsrfCookieName = 'csrftoken';
+    axios.defaults.xsrfHeaderName = 'X-CSRFToken';
+  </script>
+
+  {% block footer %}{% endblock footer %}
+</body>
+</html>

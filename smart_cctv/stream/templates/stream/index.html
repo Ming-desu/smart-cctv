@@ -1,0 +1,33 @@
+{% extends 'partials/base.view.html' %}
+
+{% block title %}
+  Stream
+{% endblock title %}
+
+{% block body %}
+  {% if cameras|length == 0 %}
+    <div class="col-10 col-md-5 mx-auto">
+      <div class="py-5"></div>
+      <img src="/img/undraw_empty_xct9.svg" class="img-fluid mb-4" alt="">
+      <p class="text-muted text-center">
+        No cameras found, consider <a href="{% url 'cameras.index' %}" class="link text-decoration-none">creating a camera</a>.
+      </p>
+    </div>
+  {% else %}
+    <h1 class="h3 flex-fill mb-4">Camera Stream</h1>
+    <div class="row">
+      {% for camera in cameras %}
+        <div class="col-12 col-md-6 col-lg-4 mb-4">
+          <div class="card">
+            <div class="card-img-top camera">
+              <img src="{% url 'stream.video' %}?url={{ camera.url }}&camera={{ camera.description }}" class="img-fluid d-block">
+            </div>
+            <div class="card-body">
+              <h5 class="card-title m-0">{{ camera.description }}</h5>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+{% endblock body %}

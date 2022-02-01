@@ -1,0 +1,81 @@
+{% extends 'partials/base.view.html' %}
+
+{% block title %}
+  Cameras
+{% endblock title %}
+
+{% block body %}
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 flex-fill m-0">Create new camera</h1>
+    <a href="{% url 'cameras.index' %}" class="btn btn-secondary">Go Back</a>
+  </div>
+  <form action="{% url 'cameras.store' %}" class="row" method="POST">
+    {% csrf_token %}
+    <div id="error"></div>
+    <div class="col-12 col-md-6 mb-4">
+      <div class="card mb-4">
+        <div class="card-body">
+          <h5 class="card-title">Camera Information</h5>
+          <div class="form-group">
+            <label for="description" class="form-label">Description</label>
+            <input type="text" name="description" id="description" class="form-control" placeholder="E.g. Living Room" required>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-12 col-md-6 mb-4">
+      <div class="card mb-4">
+        <div class="card-body">
+          <h5 class="card-title">Connection Information</h5>
+          <div class="form-group mb-2">
+            <label for="url" class="form-label">Connection URL</label>
+            <input type="text" name="url" id="url" class="form-control" placeholder="E.g. rtsp://username@password:192.168.1.x/some-path" required>
+          </div>
+        </div>
+      </div>
+      <div class="text-end">
+        <a href="{% url 'cameras.index' %}" class="btn btn-light me-3">Cancel</a>
+        <button type="submit" name="submit" class="btn btn-primary">Create new camera</button>
+      </div>
+    </div>
+  </form>
+{% endblock body %}
+
+{% block footer %}
+  <script>
+    const initializeForm = () => {
+      const form = document.querySelector('form');
+
+      form.addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        const description = this.description.value;
+        const url = this.url.value;
+
+        if (!description || !url) {
+          return showError('Please fill up all the required fields.');
+        }
+
+        disableButton(this.submit);
+
+        try {
+          const response = await axios.post(this.action, {
+            description,
+            url,
+          });
+
+          window.location.href = '{% url 'cameras.index' %}';
+        }
+        catch(err) {
+          showError(err.response.data.message ?? 'Server error, please contact your admin.');
+        }
+
+        enableButton(this.submit);
+      });
+    };
+
+    document.addEventListener('DOMContentLoaded', () => {
+      initializeForm();
+    });
+  </script>
+{% endblock footer %}

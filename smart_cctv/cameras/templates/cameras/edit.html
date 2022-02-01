@@ -1,0 +1,116 @@
+{% extends 'partials/base.view.html' %}
+
+{% block title %}
+  Cameras
+{% endblock title %}
+
+{% block body %}
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 flex-fill m-0">Edit existing camera</h1>
+    <div class="d-flex">
+      <form action="{% url 'cameras.delete' camera.id %}" name="form_delete" class="me-3" method="POST">
+        <input type="hidden" name="camera_id" value="{{ camera.id }}">
+        <button type="submit" name="submit" class="btn btn-danger">
+          <i class="las la-trash-alt me-2"></i>
+          Delete
+        </button>
+      </form>
+      <a href="{% url 'cameras.index' %}" class="btn btn-secondary">Go Back</a>
+    </div>
+  </div>
+  <form action="{% url 'cameras.update' camera.id %}" name="form_edit" class="row" method="POST">
+    {% csrf_token %}
+    <div id="error"></div>
+    <div class="col-12 col-md-6 mb-4">
+      <div class="card mb-4">
+        <div class="card-body">
+          <h5 class="card-title">Camera Information</h5>
+          <div class="form-group">
+            <label for="description" class="form-label">Description</label>
+            <input type="text" name="description" id="description" class="form-control" placeholder="E.g. Living Room" value="{{ camera.description }}" required>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-12 col-md-6 mb-4">
+      <div class="card mb-4">
+        <div class="card-body">
+          <h5 class="card-title">Connection Information</h5>
+          <div class="form-group mb-2">
+            <label for="url" class="form-label">Connection URL</label>
+            <input type="text" name="url" id="url" class="form-control" placeholder="E.g. rtsp://username@password:192.168.1.x/some-path" value="{{ camera.url }}" required>
+          </div>
+        </div>
+      </div>
+      <div class="text-end">
+        <a href="{% url 'cameras.index' %}" class="btn btn-light me-3">Cancel</a>
+        <button type="submit" name="submit" class="btn btn-primary">Save changes</button>
+      </div>
+    </div>
+  </form>
+{% endblock body %}
+
+{% block footer %}
+  <script>
+    const initializeEditForm = () => {
+      const form = document.forms.form_edit;
+
+      form.addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        const description = this.description.value;
+        const url = this.url.value;
+
+        if (!description || !url) {
+          return showError('Please fill up all the required fields.');
+        }
+
+        disableButton(this.submit);
+
+        try {
+          const response = await axios.patch(this.action, {
+            description,
+            url,
+          });
+
+          window.location.href = '{% url 'cameras.index' %}';
+        }
+        catch(err) {
+          showError(err.response.data.message ?? 'Server error, please contact your admin.');
+        }
+
+        enableButton(this.submit);
+      });
+    };
+
+    const initializeDeleteForm = () => {
+      const form = document.forms.form_delete;
+
+      form.addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        if (!confirm('Are you sure you want to delete this camera?')) {
+          return;
+        }
+
+        disableButton(this.submit);
+
+        try {
+          const response = await axios.delete(this.action);
+
+          window.location.href = '{% url 'cameras.index' %}';
+        }
+        catch(err) {
+          showError(err.response.data.message ?? 'Server error, please contact your admin.');
+        }
+
+        enableButton(this.submit);
+      });
+    };
+
+    document.addEventListener('DOMContentLoaded', () => {
+      initializeEditForm();
+      initializeDeleteForm();
+    });
+  </script>
+{% endblock footer %}

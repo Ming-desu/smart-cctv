@@ -1,0 +1,119 @@
+{% extends 'partials/base.view.html' %}
+
+{% block title %}
+  Cameras
+{% endblock title %}
+
+{% block body %}
+  {% if cameras|length == 0 %}
+    <div class="col-10 col-md-5 mx-auto">
+      <div class="py-5"></div>
+      <img src="/img/undraw_empty_xct9.svg" class="img-fluid mb-4" alt="">
+      <p class="text-muted text-center">
+        No cameras found, consider <a href="{% url 'cameras.create' %}" class="link text-decoration-none">creating a camera</a>.
+      </p>
+    </div>
+  {% else %}
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <h1 class="h3 flex-fill m-0">Registered cameras</h1>
+      <form action="{% url 'cameras.search' %}" method="GET">
+        <div class="input-group">
+          <input type="text" name="q" id="q" class="form-control" placeholder="Search for a keyword...">
+          <button type="submit" class="btn btn-secondary">
+            <i class="las la-search"></i>
+          </button>
+        </div>
+      </form>
+    </div>
+    <div class="row" id="camerasContainer">
+      {% for camera in cameras %}
+        <div class="col-12 col-md-6 col-lg-4 mb-4">
+          <div class="card">
+            {% if camera.preview %}
+              <div class="card-img-top">
+                <img src="{{ camera.preview }}" class="img-fluid" alt="{{ camera.description }} preview">
+              </div>
+            {% endif %}
+            <div class="card-body">
+              <h5 class="card-title m-0">{{ camera.description }}</h5>
+              <p class="text-muted m-0">{{ camera.url }}</p>
+            </div>
+            <div class="card-footer text-end">
+              <a href="{% url 'cameras.edit' camera.id %}" class="btn btn-link text-primary text-decoration-none">
+                <i class="las la-pen"></i>
+                Edit
+              </a>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+  <div class="container position-fixed text-end start-0 bottom-0 end-0 pe-none">
+    <a href="{% url 'cameras.create' %}" class="d-inline-flex justify-content-center align-items-center btn btn-secondary rounded-circle shadow pe-auto me-4 mb-4" style="width: 60px; height: 60px">
+      <i class="las la-plus fs-4"></i>
+    </a>
+  </div>
+{% endblock body %}
+
+{% block footer %}
+  <script>
+    const initializeForm = () => {
+      const form = document.querySelector('form');
+
+      form.addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        axios.get(`${this.action}?q=${this.q.value}`)
+          .then(response => response.data)
+          .then(data => {
+            const container = document.getElementById('camerasContainer');
+            container.innerHTML = '';
+
+            data.cameras = JSON.parse(data.cameras)
+
+            if (data.cameras.length <= 0) {
+              container.innerHTML += `
+                <div class="col-10 col-md-5 mx-auto">
+                  <img src="/img/undraw_empty_xct9.svg" class="img-fluid mb-4" alt="">
+                  <p class="text-muted text-center">
+                    No cameras found.
+                  </p>
+                </div>
+              `;
+            }
+            else {
+              data.cameras.forEach(camera => {
+                container.innerHTML += `
+                  <div class="col-12 col-md-6 col-lg-4 mb-4">
+                    <div class="card">
+                      ${ camera.preview ? `
+                        <div class="card-img-top">
+                          <img src="${camera.preview}" class="img-fluid" alt="${camera.description} preview">
+                        </div>
+                      ` : `` }
+                      <div class="card-body">
+                        <h5 class="card-title m-0">${ camera.description }</h5>
+                        <p class="text-muted m-0">${ camera.url }</p>
+                      </div>
+                      <div class="card-footer text-end">
+                        <a href="/cameras/${camera.id}/edit" class="btn btn-link text-primary text-decoration-none">
+                          <i class="las la-pen"></i>
+                          Edit
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+                `;
+              });
+            }
+          })
+          .catch(err => console.log(err));
+      });
+    };
+
+    document.addEventListener('DOMContentLoaded', () => {
+      initializeForm();
+    });
+  </script>
+{% endblock footer %}

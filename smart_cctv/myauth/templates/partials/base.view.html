@@ -1,0 +1,13 @@
+{% extends './main.html' %}
+
+{% block content %}
+  <div class="d-flex flex-column vh-100">
+    {% include './components/header.html' %}
+    <main class="flex-fill d-lg-flex navbar-expand-lg">
+      {% include './components/nav.html' %}
+      <div class="col-12 col-lg-9 p-4">
+        {% block body %}{% endblock body %}
+      </div>
+    </main>
+  </div>
+{% endblock content %}

@@ -1,0 +1,31 @@
+<div class="collapse navbar-collapse flex-column align-items-lg-start col-12 col-lg-3 bg-white border-end p-4" id="nav">
+  <h2 class="mb-4 h4">Menu</h2>
+  <nav class="w-100">
+    <ul class="nav nav-pills flex-column">
+      <li class="nav-item">
+        <a href="{% url 'stream.index' %}" class="nav-link {% if 'stream' in request.path %}active{% endif %}">
+          <i class="las la-video me-2"></i>
+          Stream
+        </a>
+      </li>
+      <li class="nav-item">
+        <a href="{% url 'cameras.index' %}" class="nav-link {% if 'cameras' in request.path %}active{% endif %}">
+          <i class="las la-camera me-2"></i>
+          Cameras
+        </a>
+      </li>
+      <li class="nav-item">
+        <a href="{% url 'users.index' %}" class="nav-link {% if 'users' in request.path %}active{% endif %}">
+          <i class="las la-user me-2"></i>
+          Users
+        </a>
+      </li>
+      <li class="nav-item">
+        <a href="{% url 'auth.logout' %}" class="nav-link">
+          <i class="las la-sign-out-alt me-2"></i>
+          Logout
+        </a>
+      </li>
+    </ul>
+  </nav>
+</div>

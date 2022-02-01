@@ -1,0 +1,134 @@
+{% extends 'partials/base.view.html' %}
+
+{% block title %}
+  Users
+{% endblock title %}
+
+{% block body %}
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 flex-fill m-0">Create new user</h1>
+    <a href="{% url 'users.index' %}" class="btn btn-secondary">Go Back</a>
+  </div>
+  <form action="{% url 'users.store' %}" class="row" method="POST">
+    {% csrf_token %}
+    <div id="error"></div>
+    <div class="col-12 col-md-6 mb-4">
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title">Personal Information</h5>
+          <div class="row">
+            <div class="col-md-6 mb-2">
+              <div class="form-group">
+                <label for="first_name" class="form-label">First name</label>
+                <input type="text" name="first_name" id="first_name" class="form-control" placeholder="E.g. Juan" required>
+              </div>
+            </div>
+            <div class="col-md-6 mb-2">
+              <div class="form-group">
+                <label for="last_name" class="form-label">Last name</label>
+                <input type="text" name="last_name" id="last_name" class="form-control" placeholder="E.g. Dela Cruz" required>
+              </div>
+            </div>
+          </div>
+          <div class="input-check d-flex justify-content-end">
+            <div class="form-check me-3">
+              <input class="form-check-input" type="radio" name="sex" id="male" value="Male" checked>
+              <label class="form-check-label" for="male">
+                Male
+              </label>
+            </div>
+            <div class="form-check">
+              <input class="form-check-input" type="radio" name="sex" id="female" value="Female">
+              <label class="form-check-label" for="female">
+                Female
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-12 col-md-6 mb-4">
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title">Account Information</h5>
+          <div class="form-group mb-2">
+            <label for="username" class="form-label">Username</label>
+            <div class="input-group">
+              <span class="input-group-text">
+                <i class="las la-envelope"></i>
+              </span>
+              <input type="text" name="username" id="username" class="form-control" placeholder="Email or username" required>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="password" class="form-label">Password</label>
+            <div class="input-group">
+              <span class="input-group-text">
+                <i class="las la-lock"></i>
+              </span>
+              <input type="password" name="password" id="password" class="form-control" placeholder="Password" required>
+            </div>
+          </div>
+          <div class="form-group mt-2">
+            <label for="role" class="form-label">Role</label>
+            <select name="role" id="role" class="form-select">
+              <option value="Admin">Admin</option>
+              <option value="Operator" selected>Operator</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="text-end">
+      <a href="{% url 'users.index' %}" class="btn btn-light me-3">Cancel</a>
+      <button type="submit" name="submit" class="btn btn-primary">Create new account</button>
+    </div>
+  </form>
+{% endblock body %}
+
+{% block footer %}
+  <script>
+    const initializeForm = () => {
+      const form = document.querySelector('form');
+
+      form.addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        const first_name = this.first_name.value;
+        const last_name = this.last_name.value;
+        const sex = this.querySelector('[name="sex"]:checked').value;
+        const username = this.username.value;
+        const password = this.password.value;
+        const role = this.role.value;
+
+        if (!first_name || !last_name || !username || !password) {
+          return showError('Please fill up all the required fields.');
+        }
+
+        disableButton(this.submit)
+
+        try {
+          const response = await axios.post(this.action, {
+            first_name,
+            last_name,
+            sex,
+            username,
+            password,
+            role
+          });
+
+          window.location.href = '{% url 'users.index' %}';
+        }
+        catch(err) {
+          showError(err.response.data.message ?? 'Server error, please contact your admin.');
+        }
+
+        enableButton(this.submit);
+      });
+    };
+
+    document.addEventListener('DOMContentLoaded', () => {
+      initializeForm();
+    });
+  </script>
+{% endblock footer %}

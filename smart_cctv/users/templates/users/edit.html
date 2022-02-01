@@ -1,0 +1,174 @@
+{% extends 'partials/base.view.html' %}
+
+{% block title %}
+  Users
+{% endblock title %}
+
+{% block body %}
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 flex-fill m-0">Edit existing user</h1>
+    <div class="d-flex">
+      <form action="{% url 'users.delete' mUser.id %}" name="form_delete" class="me-3" method="POST">
+        <input type="hidden" name="user_id" value="{{ mUser.id }}">
+        <button type="submit" name="submit" class="btn btn-danger">
+          <i class="las la-trash-alt me-2"></i>
+          Delete
+        </button>
+      </form>
+      <a href="{% url 'users.index' %}" class="btn btn-secondary">Go Back</a>
+    </div>
+  </div>
+  <form action="{% url 'users.update' mUser.id %}" name="form_edit" class="row" method="POST">
+    {% csrf_token %}
+    <input type="hidden" name="user_id" value="{{ mUser.id }}">
+    <div id="error"></div>
+    <div class="col-12 col-md-6 mb-4">
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title">Personal Information</h5>
+          <div class="row">
+            <div class="col-md-6 mb-2">
+              <div class="form-group">
+                <label for="first_name" class="form-label">First name</label>
+                <input type="text" name="first_name" id="first_name" class="form-control" placeholder="E.g. Juan" value="{{ mUser.first_name }}" required>
+              </div>
+            </div>
+            <div class="col-md-6 mb-2">
+              <div class="form-group">
+                <label for="last_name" class="form-label">Last name</label>
+                <input type="text" name="last_name" id="last_name" class="form-control" placeholder="E.g. Dela Cruz" value="{{ mUser.last_name }}" required>
+              </div>
+            </div>
+          </div>
+          <div class="input-check d-flex justify-content-end">
+            <div class="form-check me-3">
+              <input class="form-check-input" type="radio" name="sex" id="male" value="Male" {% if mUser.profile.sex == 'Male' %}checked{% endif %}>
+              <label class="form-check-label" for="male">
+                Male
+              </label>
+            </div>
+            <div class="form-check">
+              <input class="form-check-input" type="radio" name="sex" id="female" value="Female" {% if mUser.profile.sex == 'Female' %}checked{% endif %}>
+              <label class="form-check-label" for="female">
+                Female
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-12 col-md-6 mb-4">
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title">Account Information</h5>
+          <div class="form-group mb-2">
+            <label for="username" class="form-label">Username</label>
+            <div class="input-group">
+              <span class="input-group-text">
+                <i class="las la-envelope"></i>
+              </span>
+              <input type="text" name="username" id="username" class="form-control" placeholder="Email or username" value="{{ mUser.username }}" required>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="password" class="form-label">Password</label>
+            <div class="input-group">
+              <span class="input-group-text">
+                <i class="las la-lock"></i>
+              </span>
+              <input type="password" name="password" id="password" class="form-control" placeholder="Password">
+            </div>
+          </div>
+          <div class="form-group mt-2">
+            <label for="role" class="form-label">Role</label>
+            <select name="role" id="role" class="form-select">
+              <option value="Admin" {% if mUser.profile.role == 'Admin' %}selected{% endif %}>Admin</option>
+              <option value="Operator" {% if mUser.profile.role == 'Operator' %}selected{% endif %}>Operator</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="text-end">
+      <a href="{% url 'users.index' %}" class="btn btn-light me-3">Cancel</a>
+      <button type="submit" name="submit" class="btn btn-primary">Save changes</button>
+    </div>
+  </form>
+{% endblock body %}
+
+{% block footer %}
+  <script>
+    const initializeEditForm = () => {
+      const form = document.forms.form_edit;
+
+      form.addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        let first_name = this.first_name.value;
+        let last_name = this.last_name.value;
+        let sex = this.querySelector('[name="sex"]:checked').value;
+        let username = this.username.value;
+        let password = this.password.value;
+        let role = '{{ mUser.role }}';
+
+        if (this.role) {
+          role = this.role.value;
+        }
+
+        if (!first_name || !last_name || !username) {
+          return showError('Please fill up all the required fields.');
+        }
+
+        disableButton(this.submit);
+
+        try {
+          const response = await axios.patch(this.action, {
+            first_name,
+            last_name,
+            sex,
+            username,
+            password,
+            role
+          });
+
+          window.location.href = '/users';
+        }
+        catch(err) {
+          showError(err.response.data.message ?? 'Server error, please contact your admin.');
+        }
+
+        enableButton(this.submit);
+      });
+    };
+
+    const initializeDeleteForm = () => {
+      const form = document.forms.form_delete;
+      
+      form.addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        if (!confirm('Are you sure you want to delete this user?')) {
+          return;
+        }
+
+        disableButton(this.submit);
+
+        try {
+          const response = await axios.delete(this.action);
+
+          window.location.href = '/users';
+        }
+        catch(err) {
+          showError(err.response.data.message ?? 'Server error, please contact your admin.');
+        }
+
+        enableButton(this.submit);
+      });
+    };
+
+    document.addEventListener('DOMContentLoaded', () => {
+      initializeEditForm();
+      initializeDeleteForm();
+    });
+  </script>
+{% endblock footer %}

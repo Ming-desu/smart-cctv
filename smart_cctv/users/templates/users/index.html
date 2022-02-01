@@ -1,0 +1,123 @@
+{% extends 'partials/base.view.html' %}
+
+{% block title %}
+  Users
+{% endblock title %}
+
+{% block body %}
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 flex-fill m-0">Registered users</h1>
+    <form action="{% url 'users.search' %}" method="GET">
+      <div class="input-group">
+        <input type="text" name="q" id="q" class="form-control" placeholder="Search for a keyword...">
+        <button type="submit" class="btn btn-secondary">
+          <i class="las la-search"></i>
+        </button>
+      </div>
+    </form>
+  </div>
+  <div class="row" id="usersContainer">
+    {% for mUser in users %}
+      <div class="col-12 col-md-6 col-lg-4 mb-4">
+        <div class="card">
+          <div class="card-body">
+            <span class="d-inline-flex justify-content-center align-items-center fw-bold mb-3 rounded-circle" style="background: #FEA443; color: #812F33; width: 50px; height: 50px;">
+              {% if mUser.first_name and mUser.last_name %}
+                {{ mUser.first_name.0 | upper }}{{ mUser.last_name.0 | upper }}
+              {% else %}
+                {{ mUser.username.0 | upper }}{{ mUser.username.1 | upper }}
+              {% endif %}
+            </span>
+            <h5 class="card-title m-0">
+              {% if mUser.profile %}
+                {{ mUser.profile.full_name }}
+              {% else %}
+                N/A
+              {% endif %}
+            </h5>
+            <p class="text-muted mb-2">{{ mUser.username }}</p>
+            <span class="badge rounded-pill bg-light text-primary">{{ mUser.profile.role }}</span>
+          </div>
+          {% if user.profile.role == 'Admin' or user.id == mUser.id %}
+            <div class="card-footer text-end">
+              <a href="{% url 'users.edit' mUser.id %}" class="btn btn-link text-decoration-none">
+                <i class="las la-pen"></i>
+                Edit
+              </a>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+  <div class="container position-fixed text-end start-0 bottom-0 end-0 pe-none">
+    <a href="{% url 'users.create' %}" class="d-inline-flex justify-content-center align-items-center btn btn-secondary rounded-circle shadow pe-auto me-4 mb-4" style="width: 60px; height: 60px">
+      <i class="las la-plus fs-4"></i>
+    </a>
+  </div>
+{% endblock body %}
+
+{% block footer %}
+  <script>
+    const initializeForm = () => {
+      const form = document.querySelector('form');
+
+      form.addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        axios.get(`${this.action}?q=${this.q.value}`)
+          .then(response => response.data)
+          .then(data => {
+            const container = document.getElementById('usersContainer');
+            container.innerHTML = '';
+
+            data.users = JSON.parse(data.users)
+
+            if (data.users.length <= 0) {
+              container.innerHTML += `
+                <div class="col-10 col-md-5 mx-auto">
+                  <img src="/img/undraw_empty_xct9.svg" class="img-fluid mb-4" alt="">
+                  <p class="text-muted text-center">
+                    No users found.
+                  </p>
+                </div>
+              `;
+            }
+            else {
+              data.users.forEach(user => {
+                container.innerHTML += `
+                  <div class="col-12 col-md-6 col-lg-4 mb-4">
+                    <div class="card">
+                      <div class="card-body">
+                        <span class="d-inline-flex justify-content-center align-items-center fw-bold mb-3 rounded-circle" style="background: #FEA443; color: #812F33; width: 50px; height: 50px;">${ user.first_name && user.last_name ? `
+                          ${[user.first_name[0], user.last_name[0]].join('').toUpperCase()}
+                        ` : `
+                          ${[user.username[0], user.username[1]].join('').toUpperCase()}
+                        ` }</span>
+                        <h5 class="card-title m-0">${[user.first_name, user.last_name].join(' ')}</h5>
+                        <p class="text-muted mb-2">${user.username}</p>
+                        <span class="badge rounded-pill bg-light text-primary">${user.profile__role}</span>
+                      </div>
+                      ${ '{{ user.profile.role }}' == 'Admin' || user.id == '{{ user.id }}' ? `
+                        <div class="card-footer text-end">
+                          <a href="/users/${user.id}/edit" class="btn btn-link text-decoration-none">
+                            <i class="las la-pen"></i>
+                            Edit
+                          </a>
+                        </div>
+                      ` : `` }
+                    </div>
+                  </div>
+                `;
+              });
+            }
+          })
+          .catch(err => console.log(err));
+      });
+    };
+
+    document.addEventListener('DOMContentLoaded', () => {
+      initializeForm();
+    });
+  </script>
+{% endblock footer %}
