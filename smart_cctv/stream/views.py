@@ -1,3 +1,4 @@
+from wsgiref.util import request_uri
 from django.http import HttpResponse, StreamingHttpResponse
 from django.shortcuts import render
 from django.views.decorators import gzip
@@ -39,6 +40,9 @@ class VideoCamera(object):
     self.video.release()
     self.thread.stop()
     self.notification_thread.stop()
+  
+  def stop(self):
+    self.__del__()
 
   def notify(self):
     while True:
@@ -46,6 +50,7 @@ class VideoCamera(object):
         print("Attention!", "A " + str(self.names[self.classes[0]]) + " found by the system at " + self.camera + ".")
         current_time = timer()
         if self.last_notification is None or current_time - self.last_notification > 3 and (len(self.confidences) > 0 and self.confidences[0] >= 0.5):
+          self.toast = ToastNotifier()
           self.toast.show_toast("Attention!", "A " + str(self.names[self.classes[0]]) + " found by the system at " + self.camera + ".")
           self.last_notification = current_time
 
@@ -94,9 +99,13 @@ class VideoCamera(object):
       cv2.putText(image, label, (left, top), cv2.FONT_HERSHEY_COMPLEX, 0.5, (0, 0))
 
     return image
+import time
+def gen(camera: VideoCamera, request):
+  if request.path != '/stream/video_feed/':
+    camera.stop()
 
-def gen(camera: VideoCamera):
-  while True:
+  while request.path == '/stream/video_feed/':
+    print(time.time())
     frame = camera.get_frame()
     yield(b'--frame\r\n'
           b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n\r\n')
@@ -115,6 +124,9 @@ def index(request):
 def video_feed(request):
   cam = VideoCamera(request.GET['url'], request.GET['camera'])
 
+  if request.path != '/stream/video_feed/':
+    cam.stop()
+
   if cam is not None:
-    while True:
-      return StreamingHttpResponse(gen(cam), content_type='multipart/x-mixed-replace; boundary=frame')
+    while request.path == '/stream/video_feed/':
+      return StreamingHttpResponse(gen(cam, request), content_type='multipart/x-mixed-replace; boundary=frame')
